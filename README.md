@@ -19,12 +19,12 @@ real port.
 ./check.sh          # or .\check.ps1 on Windows
 ```
 
-29 tests, all passing:
+31 tests, all passing:
 
 ```
 Test Run Successful.
-Total tests: 29
-     Passed: 29
+Total tests: 31
+     Passed: 31
  Total time: 0.7168 Seconds
 ```
 
@@ -133,8 +133,8 @@ same app both ways and compare them. That is the only difference.
 `POST /pay` then answers 400 on the duplicate body with no `try`/`catch` anywhere
 in the app — the rejection happens while ASP.NET Core binds the body.
 
-Two things to know before you ship that. The 400 has an **empty body**, and the
-reason is logged at debug level only:
+Two things to know before you ship that. Outside Development, the 400 has an
+**empty body**, and the reason is logged at debug level only:
 
 ```
 dbug: Microsoft.AspNetCore.Http.RequestDelegateFactory[2]
@@ -142,9 +142,14 @@ dbug: Microsoft.AspNetCore.Http.RequestDelegateFactory[2]
       System.Text.Json.JsonException: Duplicate property 'amount' encountered during deserialization of type 'Payment'.
 ```
 
-So at the default log level nothing explains the 400, on either side. Add
-`AddProblemDetails()` or your own handling if callers need to be told what was
-wrong. Second, `JsonSerializerOptions.Strict` is read-only
+So at the default log level nothing explains the 400, on either side.
+`AddProblemDetails()` on its own leaves the body empty; add `UseStatusCodePages()`
+as well and the body becomes a generic `"title":"Bad Request"` problem, still
+with no reason in it. Callers who need the reason need your own handling.
+(In Development, the developer exception page writes the full message into the
+400 and logs it as an error. `WebApplicationFactory` runs as Development, which
+is why `Outside_Development_the_400_body_is_empty_with_or_without_AddProblemDetails`
+switches the environment to Production first.) Second, `JsonSerializerOptions.Strict` is read-only
 (`IsReadOnly` is `true`), so an app that wants it has to copy it:
 
 ```csharp

@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace DuplicateProperties.Tests;
@@ -36,6 +38,29 @@ public class RejectingDuplicatesTests
         var response = await client.PostAsync("/pay", Bodies.Json(Bodies.DuplicateAmount));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    // WebApplicationFactory runs the app as Development, where the developer
+    // exception page writes the full message into the 400. A real deployment
+    // runs as Production, and there the body is empty. AddProblemDetails() on
+    // its own does not fill it in.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Outside_Development_the_400_body_is_empty_with_or_without_AddProblemDetails(bool addProblemDetails)
+    {
+        using var api = new RejectingApi().WithWebHostBuilder(b =>
+        {
+            b.UseEnvironment("Production");
+            if (addProblemDetails)
+                b.ConfigureServices(services => services.AddProblemDetails());
+        });
+        var client = api.CreateClient();
+
+        var response = await client.PostAsync("/pay", Bodies.Json(Bodies.DuplicateAmount));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]
