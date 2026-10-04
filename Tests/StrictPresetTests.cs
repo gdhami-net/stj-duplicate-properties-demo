@@ -9,7 +9,7 @@ namespace DuplicateProperties.Tests;
 
 /// <summary>
 /// The post's second judgment call: the Strict preset does reject duplicates,
-/// but it also changes five other settings, and two of those break callers that
+/// but it also changes six other settings, and two of those break callers that
 /// work today on a web API. These tests pin exactly what it sets, read off the
 /// object rather than off the documentation.
 /// </summary>
@@ -18,7 +18,7 @@ public class StrictPresetTests(PermissiveApi api) : IClassFixture<PermissiveApi>
     private readonly HttpClient _client = api.CreateClient();
 
     [Fact]
-    public void Strict_differs_from_the_web_defaults_in_exactly_six_settings()
+    public void Strict_differs_from_the_web_defaults_in_exactly_seven_settings()
     {
         var web = new JsonSerializerOptions(JsonSerializerDefaults.Web);
         var strict = JsonSerializerOptions.Strict;
@@ -40,6 +40,9 @@ public class StrictPresetTests(PermissiveApi api) : IClassFixture<PermissiveApi>
 
         Assert.False(web.RespectRequiredConstructorParameters);
         Assert.True(strict.RespectRequiredConstructorParameters);
+
+        Assert.Same(JsonNamingPolicy.CamelCase, web.PropertyNamingPolicy);
+        Assert.Null(strict.PropertyNamingPolicy);
     }
 
     [Fact]

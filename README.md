@@ -6,7 +6,7 @@ twice"** ([gdhami.net](https://gdhami.net) — link added when the post is live)
 Send one JSON body with `"amount"` in it twice and System.Text.Json keeps the
 last copy, answers 200, and says nothing. .NET 10 added
 `JsonSerializerOptions.AllowDuplicateProperties`, which defaults to `true`, and a
-`JsonSerializerOptions.Strict` preset that turns the rejection on along with five
+`JsonSerializerOptions.Strict` preset that turns the rejection on along with six
 other changes. This repo runs the same body through all of it.
 
 Measured on **SDK 10.0.201, ASP.NET Core runtime 10.0.5**, Windows 11. The `Api`
@@ -172,12 +172,15 @@ against the Web defaults, which is what an ASP.NET Core app starts from:
 | `NumberHandling` | `AllowReadingFromString` | `Strict` |
 | `RespectNullableAnnotations` | `false` | `true` |
 | `RespectRequiredConstructorParameters` | `false` | `true` |
+| `PropertyNamingPolicy` | camelCase | none (`null`) |
 
 The .NET 10 release notes list four of these, because they describe Strict
 against `JsonSerializerOptions.Default`, where `NumberHandling` is already
 `Strict` and name matching is already case-sensitive. Against a web API the gap
-is six, and two of them break callers that work today: camelCase names stop
-matching, and a number sent as `"10"` stops being read.
+is seven. Two of them break callers that work today: camelCase names stop
+matching, and a number sent as `"10"` stops being read. A third changes what
+goes out: with no naming policy, a `Payment` serializes as
+`{"Amount":10,"To":"alice"}` instead of `{"amount":10,"to":"alice"}`.
 
 ## Project layout
 

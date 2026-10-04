@@ -64,7 +64,7 @@ var presets = new Dictionary<string, JsonSerializerOptions>(StringComparer.Ordin
     ["web"] = new(JsonSerializerDefaults.Web),
     // Web options with the one setting changed.
     ["no-duplicates"] = new(JsonSerializerDefaults.Web) { AllowDuplicateProperties = false },
-    // The whole preset, which changes six settings, not one.
+    // The whole preset, which changes seven settings, not one.
     ["strict"] = JsonSerializerOptions.Strict,
 };
 
@@ -100,6 +100,7 @@ app.MapGet("/settings", () => Results.Ok(presets.ToDictionary(
         numberHandling = pair.Value.NumberHandling.ToString(),
         respectNullableAnnotations = pair.Value.RespectNullableAnnotations,
         respectRequiredConstructorParameters = pair.Value.RespectRequiredConstructorParameters,
+        propertyNamingPolicy = pair.Value.PropertyNamingPolicy?.GetType().Name ?? "none",
     })));
 
 app.Run();
